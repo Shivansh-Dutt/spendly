@@ -3,7 +3,7 @@ import os
 import sqlite3
 from datetime import date
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, abort, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
 from database.db import (
@@ -11,6 +11,7 @@ from database.db import (
     create_expense,
     create_user,
     get_category_totals,
+    get_expense_by_id,
     get_expense_stats,
     get_recent_expenses,
     get_user_by_email,
@@ -18,6 +19,7 @@ from database.db import (
     get_user_profile,
     init_db,
     seed_db,
+    update_expense,
 )
 
 app = Flask(__name__)
@@ -235,14 +237,17 @@ def _validate_expense_form(form):
     }, None
 
 
-def _render_expense_form(form, error=None, status=200):
+def _render_expense_form(
+    form, error=None, status=200, template="add_expense.html", **context
+):
     return (
         render_template(
-            "add_expense.html",
+            template,
             categories=CATEGORIES,
             description_max_length=DESCRIPTION_MAX_LENGTH,
             error=error,
             form=form,
+            **context,
         ),
         status,
     )
@@ -283,9 +288,44 @@ def add_expense():
 # ------------------------------------------------------------------ #
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    if request.method == "GET":
+        form = {
+            "amount": f"{expense['amount']:.2f}",
+            "category": expense["category"],
+            "date": expense["date"],
+            "description": expense["description"] or "",
+        }
+        return _render_expense_form(
+            form, template="edit_expense.html", expense_id=id
+        )
+
+    clean, error = _validate_expense_form(request.form)
+    if error is not None:
+        form = {key: request.form.get(key, "") for key in EXPENSE_FIELDS}
+        return _render_expense_form(
+            form, error, 400, template="edit_expense.html", expense_id=id
+        )
+
+    if not update_expense(
+        id,
+        user_id,
+        clean["amount"],
+        clean["category"],
+        clean["date"],
+        clean["description"],
+    ):
+        abort(404)
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/delete")
