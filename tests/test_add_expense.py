@@ -480,10 +480,10 @@ class TestOtherStubsUnchanged:
         assert response.status_code == 302
         assert response.headers["Location"].endswith("/login")
 
-    def test_delete_stub_still_responds(self, client):
+    def test_delete_redirects_when_logged_out(self, client):
         response = client.get("/expenses/1/delete")
-        assert response.status_code == 200
-        assert b"Step 9" in response.data
+        assert response.status_code == 302
+        assert response.headers["Location"].endswith("/login")
 
     def test_stubs_do_not_modify_data(self, logged_in):
         before = _expense_count()

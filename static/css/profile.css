@@ -202,8 +202,16 @@
   text-decoration: none;
 }
 
-.txn-edit-link:hover {
+.txn-edit-link:hover,
+.txn-delete-link:hover {
   text-decoration: underline;
+}
+
+.txn-delete-link {
+  margin-left: 0.75rem;
+  color: var(--danger);
+  font-weight: 500;
+  text-decoration: none;
 }
 
 /* ---- Category badges ---- */

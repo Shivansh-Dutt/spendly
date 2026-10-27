@@ -197,9 +197,10 @@ class TestOwnership:
         assert _row(other)["description"] == "Other's expense"
 
 
-def test_delete_stub_unchanged(logged_in):
+def test_delete_page_renders_confirmation(logged_in):
     response = logged_in.get("/expenses/1/delete")
-    assert "Step 9" in response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert "Delete expense" in response.get_data(as_text=True)
 
 
 def test_db_helpers_scope_by_user():
