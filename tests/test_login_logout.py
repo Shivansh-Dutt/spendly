@@ -38,7 +38,7 @@ def test_get_login_renders_form(client):
 def test_login_success_sets_session_and_redirects(client):
     response = login(client)
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/")
+    assert response.headers["Location"].endswith("/profile")
     assert session_user_id(client) is not None
 
 
@@ -83,7 +83,7 @@ def test_get_login_when_logged_in_redirects(client):
     login(client)
     response = client.get("/login")
     assert response.status_code == 302
-    assert response.headers["Location"].endswith("/")
+    assert response.headers["Location"].endswith("/profile")
 
 
 def test_logout_clears_session(client):
