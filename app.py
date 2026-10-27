@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import date
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
@@ -117,21 +118,39 @@ def logout():
 
 # ---- Profile ----
 
+FILTER_RANGE_ERROR = "Start date must be on or before end date."
+FILTER_FORMAT_ERROR = "Enter dates as YYYY-MM-DD."
+
+
+def _parse_date_filter(args):
+    """Return (date_from, date_to, error). On any error the filter is dropped."""
+    date_from = args.get("date_from", "").strip()
+    date_to = args.get("date_to", "").strip()
+    try:
+        parsed_from = date.fromisoformat(date_from) if date_from else None
+        parsed_to = date.fromisoformat(date_to) if date_to else None
+    except ValueError:
+        return "", "", FILTER_FORMAT_ERROR
+    if parsed_from and parsed_to and parsed_from > parsed_to:
+        return "", "", FILTER_RANGE_ERROR
+    return date_from, date_to, None
+
+
 # --- BEGIN transactions section (subagent 1) ---
-def _profile_transactions(user_id):
-    return get_recent_expenses(user_id)
+def _profile_transactions(user_id, date_from, date_to):
+    return get_recent_expenses(user_id, date_from=date_from, date_to=date_to)
 # --- END transactions section ---
 
 
 # --- BEGIN stats section (subagent 2) ---
-def _profile_stats(user_id):
-    return get_expense_stats(user_id)
+def _profile_stats(user_id, date_from, date_to):
+    return get_expense_stats(user_id, date_from=date_from, date_to=date_to)
 # --- END stats section ---
 
 
 # --- BEGIN categories section (subagent 3) ---
-def _profile_categories(user_id):
-    return get_category_totals(user_id)
+def _profile_categories(user_id, date_from, date_to):
+    return get_category_totals(user_id, date_from=date_from, date_to=date_to)
 # --- END categories section ---
 
 
@@ -144,12 +163,16 @@ def profile():
     if user is None:
         session.clear()
         return redirect(url_for("login"))
+    date_from, date_to, filter_error = _parse_date_filter(request.args)
     return render_template(
         "profile.html",
         user=user,
-        stats=_profile_stats(user_id),
-        transactions=_profile_transactions(user_id),
-        categories=_profile_categories(user_id),
+        stats=_profile_stats(user_id, date_from, date_to),
+        transactions=_profile_transactions(user_id, date_from, date_to),
+        categories=_profile_categories(user_id, date_from, date_to),
+        date_from=date_from,
+        date_to=date_to,
+        filter_error=filter_error,
     )
 
 
