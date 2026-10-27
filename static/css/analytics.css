@@ -1,0 +1,110 @@
+/* analytics.css — analytics (coming soon) page only */
+
+.analytics-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1.5rem;
+    min-height: calc(100vh - 60px - 100px);
+}
+
+.analytics-card {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 420px;
+    padding: 2.5rem 2rem;
+    background: var(--paper-card);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 40px rgba(15, 15, 15, 0.12);
+    text-align: center;
+}
+
+.analytics-card > *:not(.analytics-circle) {
+    position: relative;
+    z-index: 1;
+}
+
+.analytics-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--paper);
+}
+
+.analytics-circle-top {
+    top: -50px;
+    right: -50px;
+    width: 160px;
+    height: 160px;
+}
+
+.analytics-circle-bottom {
+    bottom: -40px;
+    left: -40px;
+    width: 120px;
+    height: 120px;
+}
+
+.analytics-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 1.75rem;
+    color: var(--paper-card);
+    background: linear-gradient(135deg, var(--accent-soft, #2f5d41), var(--accent));
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 20px rgba(26, 71, 42, 0.3);
+}
+
+.analytics-badge {
+    display: inline-block;
+    padding: 0.55rem 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--paper-card);
+    background: linear-gradient(90deg, var(--accent), #3d6b4f);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.analytics-title {
+    margin-bottom: 1rem;
+    color: var(--accent);
+    font-family: var(--font-body);
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.analytics-text {
+    margin-bottom: 1.75rem;
+    color: var(--ink-muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.analytics-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.analytics-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.analytics-dots span:nth-child(1) { opacity: 0.5; }
+.analytics-dots span:nth-child(2) { opacity: 0.75; }
+
+.analytics-caption {
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+}
