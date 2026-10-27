@@ -158,14 +158,28 @@ def get_user_profile(user_id):
     }
 
 
+def _date_range_clause(date_from, date_to):
+    clause = ""
+    params = []
+    if date_from:
+        clause += " AND date >= ?"
+        params.append(date_from)
+    if date_to:
+        clause += " AND date <= ?"
+        params.append(date_to)
+    return clause, params
+
+
 # --- BEGIN transactions section (subagent 1) ---
-def get_recent_expenses(user_id, limit=10):
+def get_recent_expenses(user_id, limit=10, date_from=None, date_to=None):
+    range_clause, range_params = _date_range_clause(date_from, date_to)
     conn = get_db()
     try:
         rows = conn.execute(
             "SELECT date, description, category, amount FROM expenses "
-            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
-            (user_id, limit),
+            "WHERE user_id = ?" + range_clause + " "
+            "ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, *range_params, limit),
         ).fetchall()
     finally:
         conn.close()
@@ -182,18 +196,20 @@ def get_recent_expenses(user_id, limit=10):
 
 
 # --- BEGIN stats section (subagent 2) ---
-def get_expense_stats(user_id):
+def get_expense_stats(user_id, date_from=None, date_to=None):
+    range_clause, range_params = _date_range_clause(date_from, date_to)
+    params = (user_id, *range_params)
     conn = get_db()
     try:
         totals = conn.execute(
             "SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM expenses "
-            "WHERE user_id = ?",
-            (user_id,),
+            "WHERE user_id = ?" + range_clause,
+            params,
         ).fetchone()
         top = conn.execute(
-            "SELECT category FROM expenses WHERE user_id = ? "
+            "SELECT category FROM expenses WHERE user_id = ?" + range_clause + " "
             "GROUP BY category ORDER BY SUM(amount) DESC, category ASC LIMIT 1",
-            (user_id,),
+            params,
         ).fetchone()
         return {
             "total_spent": round(float(totals[0]), 2),
@@ -206,14 +222,15 @@ def get_expense_stats(user_id):
 
 
 # --- BEGIN categories section (subagent 3) ---
-def get_category_totals(user_id):
+def get_category_totals(user_id, date_from=None, date_to=None):
+    range_clause, range_params = _date_range_clause(date_from, date_to)
     conn = get_db()
     try:
         rows = conn.execute(
             "SELECT category, SUM(amount) AS total FROM expenses "
-            "WHERE user_id = ? GROUP BY category "
+            "WHERE user_id = ?" + range_clause + " GROUP BY category "
             "ORDER BY SUM(amount) DESC, category",
-            (user_id,),
+            (user_id, *range_params),
         ).fetchall()
     finally:
         conn.close()

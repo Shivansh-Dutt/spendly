@@ -149,3 +149,116 @@ def test_profile_isolates_users(client):
     body = client.get("/profile").data
     assert b"Chai" in body
     assert b"Electricity bill" not in body
+
+
+# ---- Date filter ----
+
+ASHA_EMAIL = "asha-filter@example.com"
+
+
+def _login_user_with_expenses(client, rows):
+    user_id = db.create_user("Asha Rao", ASHA_EMAIL, "password123")
+    conn = db.get_db()
+    try:
+        conn.executemany(
+            "INSERT INTO expenses (user_id, amount, category, date, description) "
+            "VALUES (?, ?, ?, ?, ?)",
+            [(user_id, *row) for row in rows],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    client.post("/login", data={"email": ASHA_EMAIL, "password": "password123"})
+    return user_id
+
+
+FILTER_ROWS = [
+    (10.0, "Food", "2026-01-05", "Jan A"),
+    (20.0, "Transport", "2026-01-15", "Jan B"),
+    (40.0, "Bills", "2026-02-10", "Feb A"),
+]
+
+
+def test_profile_filter_form_is_present(client):
+    login(client)
+    body = client.get("/profile").data
+    assert b'name="date_from"' in body
+    assert b'name="date_to"' in body
+    assert b"Apply" in body
+    assert b"Clear" in body
+
+
+def test_filter_both_bounds_inclusive(client):
+    _login_user_with_expenses(client, FILTER_ROWS)
+    body = client.get("/profile?date_from=2026-01-05&date_to=2026-01-15").data.decode()
+    assert "₹30.00" in body
+    assert "Jan A" in body and "Jan B" in body
+    assert "Feb A" not in body
+    assert 'value="2026-01-05"' in body and 'value="2026-01-15"' in body
+
+
+def test_filter_only_date_from(client):
+    _login_user_with_expenses(client, FILTER_ROWS)
+    body = client.get("/profile?date_from=2026-01-15").data.decode()
+    assert "Jan B" in body and "Feb A" in body
+    assert "Jan A" not in body
+
+
+def test_filter_only_date_to(client):
+    _login_user_with_expenses(client, FILTER_ROWS)
+    body = client.get("/profile?date_to=2026-01-15").data.decode()
+    assert "Jan A" in body and "Jan B" in body
+    assert "Feb A" not in body
+
+
+def test_filter_top_category_follows_range(client):
+    _login_user_with_expenses(client, FILTER_ROWS)
+    stats = db.get_expense_stats(
+        db.get_user_by_email(ASHA_EMAIL)["id"], date_from="2026-01-01", date_to="2026-01-31"
+    )
+    assert stats["top_category"] == "Transport"
+    assert stats["transaction_count"] == 2
+
+
+def test_filter_empty_range(client):
+    _login_user_with_expenses(client, FILTER_ROWS)
+    response = client.get("/profile?date_from=2025-01-01&date_to=2025-01-31")
+    body = response.data.decode()
+    assert response.status_code == 200
+    assert "₹0.00" in body
+    assert "No transactions in this date range" in body
+    assert "—" in body
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "date_from=banana",
+        "date_to=2026-13-45",
+        "date_from=' OR 1=1 --",
+        "date_from=2026-12-01&date_to=2026-01-01",
+    ],
+)
+def test_filter_invalid_input_shows_error_and_unfiltered_data(client, query):
+    _login_user_with_expenses(client, FILTER_ROWS)
+    response = client.get("/profile?" + query)
+    body = response.data.decode()
+    assert response.status_code == 200
+    assert 'role="alert"' in body
+    assert "₹70.00" in body
+
+
+def test_filter_is_scoped_to_logged_in_user(client):
+    login(client)
+    client.get("/logout")
+    _login_user_with_expenses(client, FILTER_ROWS)
+    body = client.get("/profile?date_from=2026-01-01&date_to=2026-12-31").data.decode()
+    assert "₹70.00" in body
+    assert "Electricity bill" not in body
+    assert "₹348.69" not in body
+
+
+def test_filter_requires_login(client):
+    response = client.get("/profile?date_from=2026-01-01")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
