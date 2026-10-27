@@ -1,0 +1,250 @@
+/* profile.css — profile page only */
+
+.profile-section {
+  padding: 3rem 2rem 4rem;
+}
+
+.profile-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ---- Cards ---- */
+.profile-card,
+.stat-card,
+.profile-history,
+.profile-breakdown {
+  background: var(--paper-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+}
+
+.profile-heading {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+
+/* ---- User info ---- */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.profile-avatar {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.profile-email {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.profile-since {
+  color: var(--ink-faint);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* ---- Stats ---- */
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Layout ---- */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ---- Transactions table ---- */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.txn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.txn-table th {
+  text-align: left;
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.txn-table td {
+  padding: 0.75rem;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.txn-table tbody tr:hover {
+  background: var(--paper-warm);
+}
+
+.txn-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Category badges ---- */
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--paper-warm);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge--food { background: var(--accent-light); color: var(--accent); }
+.badge--transport { background: var(--accent-2-light); color: var(--accent-2); }
+.badge--bills { background: var(--danger-light); color: var(--danger); }
+.badge--health { background: var(--accent-2-light); color: var(--accent); }
+.badge--entertainment { background: var(--accent-light); color: var(--accent-2); }
+.badge--shopping { background: var(--paper-warm); color: var(--ink); border-color: var(--border); }
+.badge--other { background: var(--paper-warm); color: var(--ink-muted); border-color: var(--border-soft); }
+
+/* ---- Category breakdown ---- */
+.breakdown-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.breakdown-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.breakdown-name {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.breakdown-amount {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-bar {
+  --bar-color: var(--ink-muted);
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--border-soft);
+  overflow: hidden;
+}
+
+.breakdown-bar::-webkit-progress-bar {
+  background: var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+
+.breakdown-bar::-webkit-progress-value {
+  background: var(--bar-color);
+  border-radius: var(--radius-sm);
+}
+
+.breakdown-bar::-moz-progress-bar {
+  background: var(--bar-color);
+  border-radius: var(--radius-sm);
+}
+
+.breakdown-bar--food { --bar-color: var(--accent); }
+.breakdown-bar--transport { --bar-color: var(--accent-2); }
+.breakdown-bar--bills { --bar-color: var(--danger); }
+.breakdown-bar--health { --bar-color: var(--accent); }
+.breakdown-bar--entertainment { --bar-color: var(--accent-2); }
+.breakdown-bar--shopping { --bar-color: var(--ink); }
+.breakdown-bar--other { --bar-color: var(--ink-muted); }
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-section {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .txn-table {
+    min-width: 480px;
+  }
+}

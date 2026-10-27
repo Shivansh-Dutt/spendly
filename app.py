@@ -81,7 +81,7 @@ def inject_current_user():
 def login():
     if request.method == "GET":
         if session.get("user_id"):
-            return redirect(url_for("landing"))
+            return redirect(url_for("profile"))
         return render_template("login.html")
 
     email = request.form.get("email", "").strip().lower()
@@ -93,7 +93,7 @@ def login():
 
     session.clear()
     session["user_id"] = user["id"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/terms")
@@ -116,9 +116,54 @@ def logout():
     return redirect(url_for("landing"))
 
 
+# ---- Profile (hardcoded, Step 4) ----
+
+PROFILE_USER = {
+    "name": "Demo User",
+    "email": "demo@spendly.com",
+    "initials": "DU",
+    "member_since": "January 2026",
+}
+
+PROFILE_STATS = {
+    "total_spent": 348.69,
+    "transaction_count": 8,
+    "top_category": "Bills",
+}
+
+PROFILE_TRANSACTIONS = [
+    {"date": "22 Oct 2026", "description": "Groceries", "category": "Food", "amount": 27.30},
+    {"date": "18 Oct 2026", "description": "Misc", "category": "Other", "amount": 10.00},
+    {"date": "14 Oct 2026", "description": "New shoes", "category": "Shopping", "amount": 79.90},
+    {"date": "10 Oct 2026", "description": "Movie ticket", "category": "Entertainment", "amount": 18.99},
+    {"date": "08 Oct 2026", "description": "Pharmacy", "category": "Health", "amount": 45.00},
+    {"date": "05 Oct 2026", "description": "Electricity bill", "category": "Bills", "amount": 120.00},
+    {"date": "03 Oct 2026", "description": "Metro card top-up", "category": "Transport", "amount": 35.00},
+    {"date": "01 Oct 2026", "description": "Lunch", "category": "Food", "amount": 12.50},
+]
+
+PROFILE_CATEGORIES = [
+    {"name": "Bills", "amount": 120.00},
+    {"name": "Shopping", "amount": 79.90},
+    {"name": "Health", "amount": 45.00},
+    {"name": "Food", "amount": 39.80},
+    {"name": "Transport", "amount": 35.00},
+    {"name": "Entertainment", "amount": 18.99},
+    {"name": "Other", "amount": 10.00},
+]
+
+
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    return render_template(
+        "profile.html",
+        user=PROFILE_USER,
+        stats=PROFILE_STATS,
+        transactions=PROFILE_TRANSACTIONS,
+        categories=PROFILE_CATEGORIES,
+    )
 
 
 @app.route("/expenses/add")
