@@ -191,6 +191,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+.txn-table .txn-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.txn-edit-link {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.txn-edit-link:hover {
+  text-decoration: underline;
+}
+
 /* ---- Category badges ---- */
 .badge {
   display: inline-block;

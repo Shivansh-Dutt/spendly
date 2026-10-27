@@ -102,7 +102,8 @@ pytest -s
 | `GET /profile` | Implemented — renders `profile.html` with the logged-in user's real data from the DB (redirects to `/login` if not authenticated); accepts optional `date_from` / `date_to` (YYYY-MM-DD) query params to filter stats, transactions and categories |
 | `GET /expenses/add` | Implemented — renders `add_expense.html`; redirects to `/login` if not authenticated |
 | `POST /expenses/add` | Implemented — validates, creates the expense for the session user, redirects to `/profile` (400 + re-rendered form on invalid input) |
-| `GET /expenses/<id>/edit` | Stub — Step 8 |
+| `GET /expenses/<id>/edit` | Implemented — renders `edit_expense.html` pre-filled with the expense; redirects to `/login` if not authenticated, 404 if missing or owned by another user |
+| `POST /expenses/<id>/edit` | Implemented — validates, updates the expense, redirects to `/profile` (400 + re-rendered form on invalid input, 404 if not owned) |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
 
 **Do not implement a stub route unless the active task explicitly targets that step.**

@@ -475,10 +475,10 @@ class TestSecurity:
 
 
 class TestOtherStubsUnchanged:
-    def test_edit_stub_still_responds(self, client):
+    def test_edit_route_requires_login(self, client):
         response = client.get("/expenses/1/edit")
-        assert response.status_code == 200
-        assert b"Step 8" in response.data
+        assert response.status_code == 302
+        assert response.headers["Location"].endswith("/login")
 
     def test_delete_stub_still_responds(self, client):
         response = client.get("/expenses/1/delete")
