@@ -6,9 +6,12 @@ from werkzeug.security import check_password_hash
 
 from database.db import (
     create_user,
-    get_db,
+    get_category_totals,
+    get_expense_stats,
+    get_recent_expenses,
     get_user_by_email,
     get_user_by_id,
+    get_user_profile,
     init_db,
     seed_db,
 )
@@ -106,65 +109,53 @@ def privacy():
     return render_template("privacy.html")
 
 
-# ------------------------------------------------------------------ #
-# Placeholder routes — students will implement these                  #
-# ------------------------------------------------------------------ #
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("landing"))
 
 
-# ---- Profile (hardcoded, Step 4) ----
+# ---- Profile ----
 
-PROFILE_USER = {
-    "name": "Demo User",
-    "email": "demo@spendly.com",
-    "initials": "DU",
-    "member_since": "January 2026",
-}
+# --- BEGIN transactions section (subagent 1) ---
+def _profile_transactions(user_id):
+    return get_recent_expenses(user_id)
+# --- END transactions section ---
 
-PROFILE_STATS = {
-    "total_spent": 348.69,
-    "transaction_count": 8,
-    "top_category": "Bills",
-}
 
-PROFILE_TRANSACTIONS = [
-    {"date": "22 Oct 2026", "description": "Groceries", "category": "Food", "amount": 27.30},
-    {"date": "18 Oct 2026", "description": "Misc", "category": "Other", "amount": 10.00},
-    {"date": "14 Oct 2026", "description": "New shoes", "category": "Shopping", "amount": 79.90},
-    {"date": "10 Oct 2026", "description": "Movie ticket", "category": "Entertainment", "amount": 18.99},
-    {"date": "08 Oct 2026", "description": "Pharmacy", "category": "Health", "amount": 45.00},
-    {"date": "05 Oct 2026", "description": "Electricity bill", "category": "Bills", "amount": 120.00},
-    {"date": "03 Oct 2026", "description": "Metro card top-up", "category": "Transport", "amount": 35.00},
-    {"date": "01 Oct 2026", "description": "Lunch", "category": "Food", "amount": 12.50},
-]
+# --- BEGIN stats section (subagent 2) ---
+def _profile_stats(user_id):
+    return get_expense_stats(user_id)
+# --- END stats section ---
 
-PROFILE_CATEGORIES = [
-    {"name": "Bills", "amount": 120.00},
-    {"name": "Shopping", "amount": 79.90},
-    {"name": "Health", "amount": 45.00},
-    {"name": "Food", "amount": 39.80},
-    {"name": "Transport", "amount": 35.00},
-    {"name": "Entertainment", "amount": 18.99},
-    {"name": "Other", "amount": 10.00},
-]
+
+# --- BEGIN categories section (subagent 3) ---
+def _profile_categories(user_id):
+    return get_category_totals(user_id)
+# --- END categories section ---
 
 
 @app.route("/profile")
 def profile():
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+    user = get_user_profile(user_id)
+    if user is None:
+        session.clear()
         return redirect(url_for("login"))
     return render_template(
         "profile.html",
-        user=PROFILE_USER,
-        stats=PROFILE_STATS,
-        transactions=PROFILE_TRANSACTIONS,
-        categories=PROFILE_CATEGORIES,
+        user=user,
+        stats=_profile_stats(user_id),
+        transactions=_profile_transactions(user_id),
+        categories=_profile_categories(user_id),
     )
 
+
+# ------------------------------------------------------------------ #
+# Placeholder routes — implemented in later steps                     #
+# ------------------------------------------------------------------ #
 
 @app.route("/expenses/add")
 def add_expense():
