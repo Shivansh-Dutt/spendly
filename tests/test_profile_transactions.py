@@ -54,7 +54,7 @@ def test_limit_respected():
 
 def test_row_shape_and_date_format():
     row = db.get_recent_expenses(_demo_id())[0]
-    assert set(row) == {"date", "description", "category", "amount"}
+    assert set(row) == {"id", "date", "description", "category", "amount"}
     assert re.fullmatch(r"\d{2} [A-Z][a-z]{2} \d{4}", row["date"])
 
 
