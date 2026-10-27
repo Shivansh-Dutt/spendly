@@ -55,7 +55,10 @@
 
     <div class="profile-grid">
       <div class="profile-history">
-        <h2 class="profile-heading">{{ "Transactions" if filter_active else "Recent transactions" }}</h2>
+        <div class="profile-history-header">
+          <h2 class="profile-heading">{{ "Transactions" if filter_active else "Recent transactions" }}</h2>
+          <a class="btn-primary" href="{{ url_for('add_expense') }}">Add expense</a>
+        </div>
         {% if transactions %}
         <div class="table-wrap">
           <table class="txn-table">

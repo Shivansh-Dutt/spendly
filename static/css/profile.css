@@ -31,6 +31,24 @@
   margin-bottom: 1rem;
 }
 
+.profile-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-history-header .profile-heading {
+  margin-bottom: 0;
+}
+
+.profile-history-header .btn-primary {
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 /* ---- User info ---- */
 .profile-card {
   display: flex;

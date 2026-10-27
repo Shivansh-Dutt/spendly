@@ -1,0 +1,20 @@
+.optional-hint {
+    color: var(--ink-faint);
+    font-weight: 400;
+}
+
+.expense-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.expense-form-actions .btn-primary,
+.expense-form-actions .btn-ghost {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}

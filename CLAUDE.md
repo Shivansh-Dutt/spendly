@@ -100,7 +100,8 @@ pytest -s
 | `POST /login` | Implemented — verifies credentials, sets session, redirects to `/profile` |
 | `GET /logout` | Implemented — clears session, redirects to `/` |
 | `GET /profile` | Implemented — renders `profile.html` with the logged-in user's real data from the DB (redirects to `/login` if not authenticated); accepts optional `date_from` / `date_to` (YYYY-MM-DD) query params to filter stats, transactions and categories |
-| `GET /expenses/add` | Stub — Step 7 |
+| `GET /expenses/add` | Implemented — renders `add_expense.html`; redirects to `/login` if not authenticated |
+| `POST /expenses/add` | Implemented — validates, creates the expense for the session user, redirects to `/profile` (400 + re-rendered form on invalid input) |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
 
