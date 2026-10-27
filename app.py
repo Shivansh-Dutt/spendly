@@ -1,3 +1,4 @@
+import math
 import os
 import sqlite3
 from datetime import date
@@ -6,6 +7,8 @@ from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
 from database.db import (
+    CATEGORIES,
+    create_expense,
     create_user,
     get_category_totals,
     get_expense_stats,
@@ -183,13 +186,101 @@ def analytics():
     return render_template("analytics.html")
 
 
+# ---- Expenses ----
+
+DESCRIPTION_MAX_LENGTH = 200
+MAX_AMOUNT = 10_000_000
+MIN_EXPENSE_DATE = date(2000, 1, 1)
+EXPENSE_FIELDS = ("amount", "category", "date", "description")
+
+
+def _validate_expense_form(form):
+    """Return (clean_values, error). clean_values is None when error is set."""
+    raw_amount = form.get("amount", "").strip()
+    category = form.get("category", "")
+    raw_date = form.get("date", "").strip()
+    description = form.get("description", "").strip()
+
+    try:
+        amount = round(float(raw_amount), 2)
+    except ValueError:
+        return None, "Enter a valid amount."
+    if not math.isfinite(amount) or amount <= 0:
+        return None, "Amount must be greater than zero."
+    if amount > MAX_AMOUNT:
+        return None, "Amount is too large."
+
+    if category not in CATEGORIES:
+        return None, "Choose a category from the list."
+
+    try:
+        expense_date = date.fromisoformat(raw_date)
+    except ValueError:
+        return None, "Enter the date as YYYY-MM-DD."
+    if expense_date < MIN_EXPENSE_DATE:
+        return None, f"Date must be on or after {MIN_EXPENSE_DATE.isoformat()}."
+    if expense_date > date.today():
+        return None, "Date cannot be in the future."
+
+    if len(description) > DESCRIPTION_MAX_LENGTH:
+        return None, (
+            f"Description must be {DESCRIPTION_MAX_LENGTH} characters or fewer."
+        )
+
+    return {
+        "amount": amount,
+        "category": category,
+        "date": expense_date.isoformat(),
+        "description": description or None,
+    }, None
+
+
+def _render_expense_form(form, error=None, status=200):
+    return (
+        render_template(
+            "add_expense.html",
+            categories=CATEGORIES,
+            description_max_length=DESCRIPTION_MAX_LENGTH,
+            error=error,
+            form=form,
+        ),
+        status,
+    )
+
+
+@app.route("/expenses/add", methods=["GET", "POST"])
+def add_expense():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        form = dict.fromkeys(EXPENSE_FIELDS, "")
+        form["date"] = date.today().isoformat()
+        return _render_expense_form(form)
+
+    clean, error = _validate_expense_form(request.form)
+    if error is not None:
+        form = {key: request.form.get(key, "") for key in EXPENSE_FIELDS}
+        return _render_expense_form(form, error, 400)
+
+    try:
+        create_expense(
+            user_id,
+            clean["amount"],
+            clean["category"],
+            clean["date"],
+            clean["description"],
+        )
+    except sqlite3.IntegrityError:
+        session.clear()
+        return redirect(url_for("login"))
+    return redirect(url_for("profile"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — implemented in later steps                     #
 # ------------------------------------------------------------------ #
-
-@app.route("/expenses/add")
-def add_expense():
-    return "Add expense — coming in Step 7"
 
 
 @app.route("/expenses/<int:id>/edit")
