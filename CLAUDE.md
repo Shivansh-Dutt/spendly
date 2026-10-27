@@ -99,7 +99,7 @@ pytest -s
 | `GET /login` | Implemented — renders `login.html`; redirects to `/profile` if already logged in |
 | `POST /login` | Implemented — verifies credentials, sets session, redirects to `/profile` |
 | `GET /logout` | Implemented — clears session, redirects to `/` |
-| `GET /profile` | Implemented — renders `profile.html` (hardcoded data; redirects to `/login` if not authenticated) |
+| `GET /profile` | Implemented — renders `profile.html` with the logged-in user's real data from the DB (redirects to `/login` if not authenticated) |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
@@ -115,6 +115,5 @@ pytest -s
 - **Never put DB logic in route functions** — it belongs in `database/db.py`
 - **Never install new packages** mid-feature without flagging it — keep `requirements.txt` in sync
 - **Never use JS frameworks** — the frontend is intentionally vanilla
-- **`database/db.py` is currently empty** — do not assume helpers exist until the step that implements them
 - **FK enforcement is manual** — SQLite foreign keys are off by default; `get_db()` must run `PRAGMA foreign_keys = ON` on every connection
 - The app runs on **port 5001**, not the Flask default 5000 — don't change this

@@ -13,15 +13,8 @@ HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 
 
 @pytest.fixture(autouse=True)
-def temp_db(monkeypatch, tmp_path):
-    monkeypatch.setattr(db, "DB_PATH", str(tmp_path / "test.db"))
-    db.init_db()
-    db.seed_db()
-
-
-@pytest.fixture
-def client():
-    return app_module.app.test_client()
+def _use_temp_db(temp_db):
+    pass
 
 
 def login(client):
@@ -66,7 +59,7 @@ def test_profile_transaction_table_rows(client):
     login(client)
     body = client.get("/profile").data.decode()
     tbody = body.split("<tbody>")[1].split("</tbody>")[0]
-    assert tbody.count("<tr>") == len(app_module.PROFILE_TRANSACTIONS) >= 3
+    assert tbody.count("<tr>") >= 3
 
 
 def test_profile_transaction_content(client):
@@ -80,7 +73,7 @@ def test_profile_transaction_content(client):
 def test_profile_category_breakdown(client):
     login(client)
     body = client.get("/profile").data
-    assert body.count(b"<progress") == len(app_module.PROFILE_CATEGORIES) >= 3
+    assert body.count(b"<progress") >= 3
     assert b"breakdown-bar--shopping" in body
 
 
@@ -105,3 +98,54 @@ def test_profile_template_has_no_inline_styles():
     source = (ROOT / "templates/profile.html").read_text(encoding="utf-8")
     assert "style=" not in source
     assert "<style" not in source
+
+
+def test_profile_new_user_empty_state(client):
+    db.create_user("Asha Rao", "asha@example.com", "password123")
+    client.post("/login", data={"email": "asha@example.com", "password": "password123"})
+    response = client.get("/profile")
+    assert response.status_code == 200
+    body = response.data
+    assert b"Asha Rao" in body
+    assert b"Demo User" not in body
+    assert b"No transactions yet" in body
+    assert "₹0.00".encode() in body
+
+
+def test_profile_shows_own_name_not_demo(client):
+    db.create_user("Asha Rao", "asha@example.com", "password123")
+    client.post("/login", data={"email": "asha@example.com", "password": "password123"})
+    body = client.get("/profile").data
+    assert b"asha@example.com" in body
+    assert b"AR" in body
+
+
+def test_profile_stale_session_redirects_to_login(client):
+    with client.session_transaction() as sess:
+        sess["user_id"] = 9999
+    response = client.get("/profile")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
+    with client.session_transaction() as sess:
+        assert "user_id" not in sess
+
+
+def test_profile_isolates_users(client):
+    user_id = db.create_user("Asha Rao", "asha@example.com", "password123")
+    conn = db.get_db()
+    conn.execute(
+        "INSERT INTO expenses (user_id, amount, category, date, description) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (user_id, 5.00, "Food", "2026-10-01", "Chai"),
+    )
+    conn.commit()
+    conn.close()
+
+    login(client)
+    assert b"Chai" not in client.get("/profile").data
+
+    client.get("/logout")
+    client.post("/login", data={"email": "asha@example.com", "password": "password123"})
+    body = client.get("/profile").data
+    assert b"Chai" in body
+    assert b"Electricity bill" not in body

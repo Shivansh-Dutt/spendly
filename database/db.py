@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 
 from werkzeug.security import generate_password_hash
 
@@ -135,3 +135,87 @@ def create_user(name, email, password):
         return cursor.lastrowid
     finally:
         conn.close()
+
+
+def _format_expense_date(iso_date):
+    return datetime.strptime(iso_date, "%Y-%m-%d").strftime("%d %b %Y")
+
+
+def _format_member_since(created_at):
+    return datetime.strptime(created_at[:10], "%Y-%m-%d").strftime("%B %Y")
+
+
+def get_user_profile(user_id):
+    user = get_user_by_id(user_id)
+    if user is None:
+        return None
+    initials = "".join(part[0] for part in user["name"].split()[:2]).upper()
+    return {
+        "name": user["name"],
+        "email": user["email"],
+        "initials": initials or "?",
+        "member_since": _format_member_since(user["created_at"]),
+    }
+
+
+# --- BEGIN transactions section (subagent 1) ---
+def get_recent_expenses(user_id, limit=10):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT date, description, category, amount FROM expenses "
+            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+    return [
+        {
+            "date": _format_expense_date(row["date"]),
+            "description": row["description"] or "",
+            "category": row["category"],
+            "amount": row["amount"],
+        }
+        for row in rows
+    ]
+# --- END transactions section ---
+
+
+# --- BEGIN stats section (subagent 2) ---
+def get_expense_stats(user_id):
+    conn = get_db()
+    try:
+        totals = conn.execute(
+            "SELECT COALESCE(SUM(amount), 0), COUNT(*) FROM expenses "
+            "WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+        top = conn.execute(
+            "SELECT category FROM expenses WHERE user_id = ? "
+            "GROUP BY category ORDER BY SUM(amount) DESC, category ASC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        return {
+            "total_spent": round(float(totals[0]), 2),
+            "transaction_count": int(totals[1]),
+            "top_category": top[0] if top else "—",
+        }
+    finally:
+        conn.close()
+# --- END stats section ---
+
+
+# --- BEGIN categories section (subagent 3) ---
+def get_category_totals(user_id):
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT category, SUM(amount) AS total FROM expenses "
+            "WHERE user_id = ? GROUP BY category "
+            "ORDER BY SUM(amount) DESC, category",
+            (user_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+    return [{"name": r["category"], "amount": round(r["total"], 2)} for r in rows]
+# --- END categories section ---

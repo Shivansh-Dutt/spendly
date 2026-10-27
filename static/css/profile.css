@@ -224,6 +224,11 @@
 .breakdown-bar--other { --bar-color: var(--ink-muted); }
 
 /* ---- Responsive ---- */
+.profile-empty {
+  color: var(--ink-muted);
+  padding: 1rem 0;
+}
+
 @media (max-width: 900px) {
   .profile-grid {
     grid-template-columns: 1fr;
